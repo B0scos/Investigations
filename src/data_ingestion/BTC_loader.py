@@ -105,7 +105,7 @@ def get_bitcoin_data(
     df = df.tail(candles_needed)
 
     if verbose and len(df) > 0:
-        print(f"✓ {len(df)} candles fetched for {symbol} ({timeframe})")
+        print(f"{len(df)} candles fetched for {symbol} ({timeframe})")
         print(f"  From: {df.index[0]}  To: {df.index[-1]}")
         print(f"  Last price: {df['close'].iloc[-1]:.2f}")
 

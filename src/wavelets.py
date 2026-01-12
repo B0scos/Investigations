@@ -1,4 +1,4 @@
-import pywavelets as pwt
+import pywt
 import numpy as np
 import pandas as pd
 from typing import List, Tuple
@@ -18,7 +18,7 @@ def wavelet_decompose(signal: np.ndarray, wavelet: str, level: int) -> Tuple[Lis
             - Approximation coefficients at each level.
             - Detail coefficients at each level.
     """
-    coeffs = pwt.wavedec(signal, wavelet, level=level)
+    coeffs = pywt.wavedec(signal, wavelet, level=level)
     approximation = [coeffs[0]]
     details = coeffs[1:]
     return approximation, details

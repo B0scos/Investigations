@@ -6,4 +6,4 @@ matplotlib==3.10.8
 seaborn==0.13.2
 scikit-learn==1.7.1
 PyWavelets==1.8.0
-ccxt==3.0.88
+ccxt==4.5.32
