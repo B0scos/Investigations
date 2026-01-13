@@ -7,3 +7,4 @@ seaborn==0.13.2
 scikit-learn==1.7.1
 PyWavelets==1.8.0
 ccxt==4.5.32
+arch==8.0.0
