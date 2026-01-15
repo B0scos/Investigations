@@ -224,6 +224,10 @@ def diebold_mariano(y, f1, f2, loss="mse", h=1):
     return DM, p_value
 
 
+def qlike(y, sigma2_hat, eps=1e-8):
+    sigma2_hat = np.clip(sigma2_hat, eps, None)
+    return y / sigma2_hat + np.log(sigma2_hat)
+
 # ==================================================
 # Main
 # ==================================================
@@ -234,8 +238,8 @@ if __name__ == "__main__":
 
     df = df[df["timestamp"] >= "2022-01-01"]
 
-    df["ret"] = np.log(df["close"]).diff() * 100
-    df["rv"] = df["ret"].abs()
+    df["ret"] = np.log(df["close"]).diff() #* 100
+    df["rv"] = df["ret"] ** 2
     df = df.dropna()
 
     window = 1000
@@ -253,6 +257,13 @@ if __name__ == "__main__":
     print("\n===== OOS METRICS =====")
     print("GARCH MSE:", mean_squared_error(results["rv"], results["garch"]))
     print("EWT–GARCH MSE:", mean_squared_error(results["rv"], results["ewt"]))
+
+    print("GARCH MAE:", mean_absolute_error(results["rv"], results["garch"]))
+    print("EWT–GARCH MAE:", mean_absolute_error(results["rv"], results["ewt"]))
+
+    print("GARCH qlike:", np.mean(qlike(results["rv"], results["garch"])))
+    print("EWT–GARCH qlike:", np.mean(qlike(results["rv"], results["ewt"])))
+
 
     # ---- Diebold–Mariano ----
     DM, p = diebold_mariano(
