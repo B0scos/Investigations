@@ -214,8 +214,9 @@ def rolling_oos_eval(
 
     return {
         "GARCH_MSE": mean_squared_error(rv_true[mask], garch_preds[mask]),
-        "EWT_GARCH_MSE": mean_squared_error(rv_true[mask], ewt_garch_preds[mask]),
         "GARCH_MAE": mean_absolute_error(rv_true[mask], garch_preds[mask]),
+
+        "EWT_GARCH_MSE": mean_squared_error(rv_true[mask], ewt_garch_preds[mask]),
         "EWT_GARCH_MAE": mean_absolute_error(rv_true[mask], ewt_garch_preds[mask]),
     }
 
@@ -224,18 +225,39 @@ def rolling_oos_eval(
 if __name__ == "__main__":
     df = pd.read_csv(r'C:\Users\ferre\OneDrive\Área de Trabalho\quant\data\BTC_data.csv')
 
+    df = df[df['timestamp'] >= '2023-01-01']
+
+    len_df = len(df)
+
+    window = int(len_df * 0.9)
+    print(f'Window size: {window}')
+
     df['ret'] = np.log(df['close']).diff() * 100
     df['rv'] = df['ret'].abs()  # realized volatility proxy
     df = df.dropna()
 
+    val = df['ret'].values
+    # val = df['close']
+
+    comps = ewt_decompose(val, alpha=0.2, gamma=0.3)
+
+    # for comp in comps:
+
+    #     if np.std(comp) == 0:
+    #         continue
+
+    #     print(f'Component std: {np.std(comp)}')
+
     results = rolling_oos_eval(
         returns=df['ret'].values,
         realized_vol=df['rv'].values,
-        window=500,
-        alpha=0.01,
-        gamma=0.01
+        window=window,
+        alpha=0.02,
+        gamma=0.02
     )
 
     print("\n===== ROLLING OOS RESULTS =====")
     for k, v in results.items():
         print(f"{k}: {v:.6f}")
+
+

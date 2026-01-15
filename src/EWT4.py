@@ -154,6 +154,8 @@ if __name__ == "__main__":
         r"C:\Users\ferre\OneDrive\Área de Trabalho\quant\data\BTC_data.csv"
     )
 
+    df = df[df['timestamp'] >= '2024-03-01']
+
     df["ret"] = np.log(df["close"]).diff() * 100
     df = df.dropna()
 
