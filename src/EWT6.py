@@ -239,7 +239,7 @@ if __name__ == "__main__":
     df = df[df["timestamp"] >= "2022-01-01"]
 
     df["ret"] = np.log(df["close"]).diff() #* 100
-    df["rv"] = df["ret"] ** 2
+    df["rv"] = df["ret"].abs()
     df = df.dropna()
 
     window = 1000
