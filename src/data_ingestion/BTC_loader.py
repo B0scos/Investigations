@@ -113,5 +113,5 @@ def get_bitcoin_data(
 
 
 if __name__ == "__main__":
-    df = get_bitcoin_data(timeframe="daily", days=9000)
-    df.to_csv("BTC_data.csv")
+    df = get_bitcoin_data(timeframe="hourly", days=9000)
+    df.to_csv("BTC_data_hour.csv")
