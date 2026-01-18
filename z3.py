@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from statsmodels.regression.quantile_regression import QuantReg
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import warnings
+from sklearn.svm import SVR
+
 
 warnings.filterwarnings("ignore")  # optional, keeps output clean
 
@@ -132,11 +134,16 @@ def base_forecasts(X_train, y_train, X_pred):
     
     # GARCH(1,1) forecasts - one forecast per test sample
     y_hat_garch = np.array([fit_garch(y_train) for _ in range(len(X_pred))])
+
+    svm = RandomForestRegressor().fit(X_train, y_train)
+    y_hat_svm = svm.predict(X_pred)
+    
     
     return pd.DataFrame({
         'ridge': y_hat_ridge,
         'har': y_hat_har,
-        'garch': y_hat_garch
+        'garch': y_hat_garch,
+        'svm' : y_hat_svm,
     }, index=X_pred.index)
 
 # ---------------------------
