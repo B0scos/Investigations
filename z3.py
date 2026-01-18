@@ -10,6 +10,7 @@ from statsmodels.regression.quantile_regression import QuantReg
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import warnings
 from sklearn.svm import SVR
+from sklearn.decomposition import PCA
 
 
 warnings.filterwarnings("ignore")  # optional, keeps output clean
@@ -46,6 +47,9 @@ def prepare_features(rv):
         df = pd.DataFrame({'RV_d': rv})
     else:
         df = rv.copy()
+
+    df['label'] = df['RV_d']
+    df['RV_d'] = df['RV_d'].shift(1)
     
     # Check for zeros or NaNs
     if df['RV_d'].isnull().any():
@@ -66,17 +70,31 @@ def prepare_features(rv):
     df['RV_d_lag1'] = df['RV_d'].shift(1)
     df['RV_w_lag1'] = df['RV_w'].shift(1)
     df['RV_m_lag1'] = df['RV_m'].shift(1)
+
+    df['RV_skew'] = df['RV_d_lag1'].rolling(7, min_periods=1).skew()
+    df['RV_kurtosis'] = df['RV_d_lag1'].rolling(7, min_periods=1).kurt()
     
+    quantiles = [0.3, 0.5, 0.7]
+
+    for quantile in quantiles:
+        df[f'RV_d_quantile_{quantile}'] = df['RV_d'].rolling(30, min_periods=1).quantile(quantile)
+
+    
+    
+    df = df.dropna()
+
     # Fill initial NaN values from rolling means
-    df = df.fillna(method='bfill')
+    # df = df.fillna(method='bfill')
     
     # Final check for any remaining NaNs
     if df.isnull().any().any():
         print("Warning: NaN values after feature preparation")
         df = df.dropna()
+
+    pca = PCA(n_components=3)
     
-    X = df[['RV_d_lag1', 'RV_w_lag1', 'RV_m_lag1']].astype(float)
-    y = df['RV_d'].astype(float)
+    X = pca.fit_transform(df.drop(columns=['label']))
+    y = df['label'].astype(float)
     
     print(f"Features prepared: X shape = {X.shape}, y shape = {y.shape}")
     return X, y
@@ -129,21 +147,21 @@ def base_forecasts(X_train, y_train, X_pred):
     y_hat_ridge = ridge.predict(X_pred)
     
     # HAR approximation - weighted average as in original HAR paper
-    weights = np.array([0.5, 0.3, 0.2])  # Daily, weekly, monthly weights
+    weights = np.array([1, 0, 0])  # Daily, weekly, monthly weights
     y_hat_har = (X_pred.values * weights).sum(axis=1)
     
     # GARCH(1,1) forecasts - one forecast per test sample
     y_hat_garch = np.array([fit_garch(y_train) for _ in range(len(X_pred))])
 
-    svm = RandomForestRegressor().fit(X_train, y_train)
-    y_hat_svm = svm.predict(X_pred)
+    forest = RandomForestRegressor().fit(X_train, y_train)
+    y_hat_svm = forest.predict(X_pred)
     
     
     return pd.DataFrame({
         'ridge': y_hat_ridge,
         'har': y_hat_har,
         'garch': y_hat_garch,
-        'svm' : y_hat_svm,
+        'r_forest' : y_hat_svm,
     }, index=X_pred.index)
 
 # ---------------------------
